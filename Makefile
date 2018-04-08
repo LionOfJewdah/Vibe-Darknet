@@ -1,6 +1,6 @@
 GPU=0
 CUDNN=0
-OPENCV=0
+OPENCV=1
 OPENMP=0
 DEBUG=0
 
@@ -49,6 +49,8 @@ ifeq ($(GPU), 1)
 COMMON+= -DGPU -I/usr/local/cuda/include/
 CFLAGS+= -DGPU
 LDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand
+CUDA_LIB_DIR=/usr/local/cuda/lib/ # your path to Cuda libraries
+LDFLAGS += -Wl,-rpath,$(CUDA_LIB_DIR)
 endif
 
 ifeq ($(CUDNN), 1) 

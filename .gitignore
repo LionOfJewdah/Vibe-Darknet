@@ -18,6 +18,8 @@ submission/
 cfg/
 darknet
 .fuse*
+libdarknet.a
+libdarknet.so
 
 # OS Generated #
 .DS_Store*
@@ -25,3 +27,4 @@ ehthumbs.db
 Icon?
 Thumbs.db
 *.swp
+*.weights
