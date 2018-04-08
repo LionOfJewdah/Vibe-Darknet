@@ -544,7 +544,6 @@ void validate_detector_recall(char *cfgfile, char *weightfile)
 
 void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh, float hier_thresh, char *outfile, int fullscreen)
 {
-	static int runCount = 0;
 	list *options = read_data_cfg(datacfg);
 	char *name_list = option_find_str(options, "names", "data/names.list");
 	char **names = get_labels(name_list);
@@ -568,9 +567,10 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 			printf("Enter Image Path: ");
 			fflush(stdout);
 			input = fgets(input, 256, stdin);
-			if (!input) return;
-			++runCount;
-			snprintf(output_buffer, 256, "result_%04d", runCount);
+			if (!input)
+				return;
+			char timeBuffer [50];
+			snprintf(output_buffer, 256, "result_%s", TimeAsString(timeBuffer, 50));
 			strtok(input, "\n");
 		}
 		image im = load_image_color(input,0,0);
