@@ -524,6 +524,8 @@ typedef struct detection{
     int sort_class;
 } detection;
 
+void output_detections(detection* dets, char** names, float threshold, int num, char* filename);
+
 typedef struct matrix{
     int rows, cols;
     float **vals;

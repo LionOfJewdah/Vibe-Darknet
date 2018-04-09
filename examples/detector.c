@@ -552,7 +552,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 	network *net = load_network(cfgfile, weightfile, 0);
 	set_batch_network(net, 1);
 	srand(2222222);
-	double time;
+	double time, calcTime;
 	char buff[256];
 	char *input = buff;
 	char output_buffer [256] = "predictions";
@@ -581,10 +581,13 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 		float *X = sized.data;
 		time=what_time_is_it_now();
 		network_predict(net, X);
-		printf("%s: Predicted in %f seconds.\n", input, what_time_is_it_now()-time);
+		calcTime = what_time_is_it_now();
+		printf("%s: Predicted in %f seconds.\n", input, calcTime - time);
 		int nboxes = 0;
-		detection *dets = get_network_boxes(net, im.w, im.h, thresh, hier_thresh, 0, 1, &nboxes);
+		detection *dets = get_network_boxes(net, im.w, im.h, thresh,
+			hier_thresh, 0, 1, &nboxes);
 		if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
+		output_detections(dets, names, thresh, nboxes, input);
 		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
 		free_detections(dets, nboxes);
 		save_image(im, outfile);
@@ -670,4 +673,63 @@ void run_detector(int argc, char **argv)
 		demo(cfg, weights, thresh, cam_index, filename, names, classes,
 			frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen);
 	}
+}
+
+
+void begin_detection_json_array(void) {
+	puts("{\"detections\": [");
+}
+
+void end_json_array(void) {
+	puts("]}");
+}
+
+void begin_prediction_json_array(void) {
+	puts("\"predictions\": [");
+}
+
+bool output_detection(detection* det, char** names, float threshold) {
+	bool foundAnything = false;
+	for (int idx = 0; idx < det->classes; ++idx) {
+		if (det->prob[idx] > threshold) {
+			if (foundAnything == false) {
+				foundAnything = true;
+				printf("{ \"x\": %f, \"y\": %f, \"dx\": %f, \"dy\": %f, ",
+					det->bbox.x, det->bbox.y, det->bbox.w, det->bbox.h);
+				begin_prediction_json_array();
+			}
+			else { puts(", "); }
+			printf("{"
+					"\"class\": %s, "
+					"\"confidence\": %f"
+				   "}", names[idx], det->prob[idx]*100
+			);
+		}
+
+	}
+	if (foundAnything) {
+		end_json_array();
+	}
+	return foundAnything;
+}
+
+void output_detections(detection* dets, char** names, float threshold, int num,
+	char* filename)
+{
+    begin_detection_json_array();
+    int detectionCount = 0;
+    bool shouldPrintCommaNextTime = false;
+	for (int i = 0; i < num; ++i) {
+		if (shouldPrintCommaNextTime) {
+			puts(", ");
+			shouldPrintCommaNextTime = false;
+		}
+		bool detected = output_detection(dets + i, names, threshold);
+		if (detected) {
+			++detectionCount;
+			shouldPrintCommaNextTime = true;
+		}
+	}
+	printf("], \"count\": %d", detectionCount);
+	printf((filename ? ", \"image\": \"%s\"}\n" : "}\n"), filename);
 }
