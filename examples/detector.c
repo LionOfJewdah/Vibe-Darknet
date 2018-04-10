@@ -542,7 +542,8 @@ void validate_detector_recall(char *cfgfile, char *weightfile)
 	}
 }
 
-void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh, float hier_thresh, char *outfile, int fullscreen)
+void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filename,
+	float thresh, float hier_thresh, char *outImage, int full_json)
 {
 	list *options = read_data_cfg(datacfg);
 	char *name_list = option_find_str(options, "names", "data/names.list");
@@ -556,19 +557,23 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 	char buff[256];
 	char *input = buff;
 	char output_buffer [256] = "predictions";
-	if (!outfile) {
-		outfile = output_buffer;
+	char json_output_filename [80] = "result_";
+	if (!outImage) {
+		outImage = output_buffer;
 	}
 	float nms=.45;
 	while (1) {
+		// open a file and test if it's been opened and writ eto it
 		if (filename) {
 			strncpy(input, filename, 256);
 		} else {
 			printf("Enter Image Path: ");
 			fflush(stdout);
 			input = fgets(input, 256, stdin);
-			if (!input)
+			if (!input) {
+				// close output file 
 				return;
+			}
 			char timeBuffer [50];
 			snprintf(output_buffer, 256, "result_%s", TimeAsString(timeBuffer, 50));
 			strtok(input, "\n");
@@ -586,19 +591,26 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 		int nboxes = 0;
 		detection *dets = get_network_boxes(net, im.w, im.h, thresh,
 			hier_thresh, 0, 1, &nboxes);
+
 		if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
-		output_detections(dets, names, thresh, nboxes, input);
+		if (nboxes) {
+			//output_detections(dets, nboxes, thresh, full_json, names, input);
+			int number_of_people = count_people(dets, nboxes, thresh, names);
+			{
+				char timeBuffer [50];
+				snprintf(json_output_filename, 80, "result_%s.json", TimeAsString(timeBuffer, 50));
+			}
+			output_people(number_of_people, input, json_output_filename);
+		} else {
+			output_no_detections(full_json, input);
+		}
 		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
 		free_detections(dets, nboxes);
-		save_image(im, outfile);
-
+		save_image(im, outImage);
 #ifdef OPENCV
 		if (filename)
 		{
-			cvNamedWindow("predictions", CV_WINDOW_NORMAL); 
-			if (fullscreen) {
-				cvSetWindowProperty("predictions", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
-			}
+			cvNamedWindow("predictions", CV_WINDOW_NORMAL);
 			show_image(im, "predictions");
 			cvWaitKey(0);
 			cvDestroyAllWindows();
@@ -620,7 +632,8 @@ void run_detector(int argc, char **argv)
 	int frame_skip = find_int_arg(argc, argv, "-s", 0);
 	int avg = find_int_arg(argc, argv, "-avg", 3);
 	if (argc < 4) {
-		fprintf(stderr, "usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n", argv[0], argv[1]);
+		fprintf(stderr, "usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n",
+			argv[0], argv[1]);
 		return;
 	}
 	char *gpu_list = find_char_arg(argc, argv, "-gpus", 0);
@@ -675,9 +688,48 @@ void run_detector(int argc, char **argv)
 	}
 }
 
+bool IsPerson(char** names, unsigned index) {
+	return (strcmp(names[index], "person") == 0);
+}
+
+int HasPerson(detection* det, char** names, float threshold)
+{
+	for (int idx = 0; idx < det->classes; ++idx) {
+		if (det->prob[idx] > threshold && IsPerson(names, idx)) 
+			return 1;
+	}
+	return 0;
+}
+
+int count_people(detection* dets, int num_boxes, float threshold, char** names)
+{
+	int count = 0;
+	for (int idx = 0; idx < num_boxes; ++idx) {
+		count += HasPerson(dets + idx, names, threshold);
+	}
+	return count;
+}
+
+void output_people(int number_of_people, const char* inputFilename,
+    const char* outputFilename)
+{
+	FILE* JSON = fopen(outputFilename, "w");
+	// uncomment this if you also want it on the command line output
+	/*printf("{\n"
+		" \"numberOfPeople\": %d,\n"
+		" \"image\": \"%s\"\n"
+		"}\n", number_of_people, inputFilename
+	);*/
+	fprintf(JSON, "{\n"
+		" \"numberOfPeople\": %d,\n"
+		" \"image\": \"%s\"\n"
+		"}\n", number_of_people, inputFilename
+	);
+	fclose(JSON);
+}
 
 void begin_detection_json_array(void) {
-	puts("{\"detections\": [");
+	puts("\"detections\": [");
 }
 
 void end_json_array(void) {
@@ -688,48 +740,74 @@ void begin_prediction_json_array(void) {
 	puts("\"predictions\": [");
 }
 
-bool output_detection(detection* det, char** names, float threshold) {
+bool output_detection(detection* det, char** names, float threshold,
+	bool full_json)
+{
 	bool foundAnything = false;
 	for (int idx = 0; idx < det->classes; ++idx) {
 		if (det->prob[idx] > threshold) {
 			if (foundAnything == false) {
 				foundAnything = true;
-				printf("{ \"x\": %f, \"y\": %f, \"dx\": %f, \"dy\": %f, ",
-					det->bbox.x, det->bbox.y, det->bbox.w, det->bbox.h);
-				begin_prediction_json_array();
 			}
-			else { puts(", "); }
-			printf("{"
-					"\"class\": %s, "
-					"\"confidence\": %f"
-				   "}", names[idx], det->prob[idx]*100
-			);
+			if (full_json) {
+				if (foundAnything) {
+					printf("{ \"x\": %f, \"y\": %f, \"dx\": %f, \"dy\": %f, ",
+						det->bbox.x, det->bbox.y, det->bbox.w, det->bbox.h);
+					begin_prediction_json_array();
+				}
+				else { puts(", "); }
+				printf("{"
+						"\"class\": %s, "
+						"\"confidence\": %f"
+					   "}", names[idx], det->prob[idx]*100
+				);
+			}
 		}
 
 	}
-	if (foundAnything) {
+	if (foundAnything && full_json) {
 		end_json_array();
 	}
 	return foundAnything;
 }
 
-void output_detections(detection* dets, char** names, float threshold, int num,
-	char* filename)
+void output_detections(detection* dets, int num_boxes, float threshold, 
+	int full_json, char** names, char* filename)
 {
-    begin_detection_json_array();
-    int detectionCount = 0;
-    bool shouldPrintCommaNextTime = false;
-	for (int i = 0; i < num; ++i) {
+	int classes = dets[0].classes;
+	int * counts = (int *) malloc(classes * sizeof(int));
+	putchar('{');
+	if (full_json) {
+		begin_detection_json_array();
+	}
+	int detectionCount = 0;
+	bool shouldPrintCommaNextTime = false;
+	for (int i = 0; i < num_boxes; ++i) {
 		if (shouldPrintCommaNextTime) {
 			puts(", ");
 			shouldPrintCommaNextTime = false;
 		}
-		bool detected = output_detection(dets + i, names, threshold);
+		bool detected = output_detection(dets + i, names, threshold, full_json);
 		if (detected) {
 			++detectionCount;
-			shouldPrintCommaNextTime = true;
+			shouldPrintCommaNextTime = full_json;
 		}
 	}
-	printf("], \"count\": %d", detectionCount);
+	if (full_json) {
+		puts("],");
+	}
+	printf("\"count\": %d", detectionCount);
 	printf((filename ? ", \"image\": \"%s\"}\n" : "}\n"), filename);
+	free(counts);
+}
+
+void output_no_detections(int full_json, const char* filename) {
+	if (full_json) {
+		printf("{ \"detections\": [], \"count\": 0 %s%s}", 
+			(filename ? "\"image\": " : ""), (filename ? filename : "")
+		);
+	}
+	else {
+		puts("{count: 0}");
+	}
 }

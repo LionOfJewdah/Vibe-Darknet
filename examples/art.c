@@ -32,14 +32,13 @@ void demo_art(char *cfgfile, char *weightfile, int cam_index)
         printf("\033[1;1H");
 
         float score = 0;
-        for(i = 0; i < n; ++i){
+        for (i = 0; i < n; ++i) {
             float s = p[idx[i]];
             if (s > score) score = s;
         }
-        score = score;
         printf("I APPRECIATE THIS ARTWORK: %10.7f%%\n", score*100);
         printf("[");
-	int upper = 30;
+        int upper = 30;
         for(i = 0; i < upper; ++i){
             printf("%c", ((i+.5) < score*upper) ? 219 : ' ');
         }

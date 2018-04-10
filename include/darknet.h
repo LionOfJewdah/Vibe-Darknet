@@ -524,8 +524,6 @@ typedef struct detection{
     int sort_class;
 } detection;
 
-void output_detections(detection* dets, char** names, float threshold, int num, char* filename);
-
 typedef struct matrix{
     int rows, cols;
     float **vals;
@@ -542,7 +540,10 @@ typedef struct{
 } data;
 
 typedef enum {
-    CLASSIFICATION_DATA, DETECTION_DATA, CAPTCHA_DATA, REGION_DATA, IMAGE_DATA, COMPARE_DATA, WRITING_DATA, SWAG_DATA, TAG_DATA, OLD_CLASSIFICATION_DATA, STUDY_DATA, DET_DATA, SUPER_DATA, LETTERBOX_DATA, REGRESSION_DATA, SEGMENTATION_DATA, INSTANCE_DATA
+    CLASSIFICATION_DATA, DETECTION_DATA, CAPTCHA_DATA, REGION_DATA,
+    IMAGE_DATA, COMPARE_DATA, WRITING_DATA, SWAG_DATA, TAG_DATA,
+    OLD_CLASSIFICATION_DATA, STUDY_DATA, DET_DATA, SUPER_DATA, LETTERBOX_DATA,
+    REGRESSION_DATA, SEGMENTATION_DATA, INSTANCE_DATA
 } data_type;
 
 typedef struct load_args{
@@ -798,5 +799,13 @@ int *read_intlist(char *s, int *n, int d);
 size_t rand_size_t();
 float rand_normal();
 float rand_uniform(float min, float max);
+
+void output_detections(detection* dets, int num_boxes, float threshold, 
+    int full_json, char** names, char* filename);
+int count_people(detection* dets, int num_boxes, float threshold, char** names);
+void output_people(int number_of_people, const char* inputFilename,
+    const char* outputFilename);
+
+void output_no_detections(int full_json, const char* filename);
 
 #endif
