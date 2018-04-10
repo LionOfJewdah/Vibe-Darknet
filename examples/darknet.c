@@ -520,6 +520,6 @@ char* FileInCV(char* buffer, size_t buffer_size, const char* relative_path)
 
 char* FileInDarknet(char* buffer, size_t buffer_size, const char* relative_path)
 {
-    strncpy(buffer, getenv("DARKNET_HOME"), buffer_size);
+    strncpy(buffer, DARKNET_DIR, buffer_size);
     return strcat(buffer, relative_path);
 }

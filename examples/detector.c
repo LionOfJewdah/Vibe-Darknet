@@ -558,7 +558,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 {
 	list *options = read_data_cfg(datacfg);
 	char name_file [256];
-	char *name_list = option_find_str(options, "names", "data/names.list");
+	char *name_list = option_find_str(options, "names", DARKNET_DIR "data/names.list");
 	name_list = GetFileThatMightBeRelative(name_file, 256, name_list);
 	char **names = get_labels(name_list);
 
@@ -570,7 +570,8 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 	char buff[256];
 	char *input = buff;
 	char output_buffer [256] = "predictions";
-	char json_output_filename [80] = "result_";
+	char json_output_filename [256] = DARKNET_DIR;
+	const int darknet_offset = sizeof(DARKNET_DIR) - 1;
 	if (!outImage) {
 		outImage = output_buffer;
 	}
@@ -607,12 +608,12 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 
 		if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
 		if (nboxes) {
+			// uncomment this if you want the JSON output of different detections than people
 			//output_detections(dets, nboxes, thresh, full_json, names, input);
 			int number_of_people = count_people(dets, nboxes, thresh, names);
-			{
-				char timeBuffer [50];
-				snprintf(json_output_filename, 80, "result_%s.json", TimeAsString(timeBuffer, 50));
-			}
+			char timeBuffer [50];
+			snprintf(json_output_filename + darknet_offset, 256 - darknet_offset,
+				"JSON/result_%s.json", TimeAsString(timeBuffer, 50));
 			output_people(number_of_people, input, json_output_filename);
 		} else {
 			output_no_detections(full_json, input);
@@ -728,11 +729,11 @@ void output_people(int number_of_people, const char* inputFilename,
 {
 	FILE* JSON = fopen(outputFilename, "w");
 	// uncomment this if you also want it on the command line output
-	/*printf("{\n"
+	printf("{\n"
 		" \"numberOfPeople\": %d,\n"
 		" \"image\": \"%s\"\n"
 		"}\n", number_of_people, inputFilename
-	);*/
+	);
 	fprintf(JSON, "{\n"
 		" \"numberOfPeople\": %d,\n"
 		" \"image\": \"%s\"\n"
