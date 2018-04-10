@@ -542,11 +542,24 @@ void validate_detector_recall(char *cfgfile, char *weightfile)
 	}
 }
 
+char* GetFileThatMightBeRelative(char* buffer, size_t buff_size, char* path)
+{
+	switch (path[0]) {
+		case '~':
+			return FileInHome(buffer, buff_size, path);
+		case '/':
+			return path;
+	}
+	return FileInDarknet(buffer, buff_size, path);
+}
+
 void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filename,
 	float thresh, float hier_thresh, char *outImage, int full_json)
 {
 	list *options = read_data_cfg(datacfg);
+	char name_file [256];
 	char *name_list = option_find_str(options, "names", "data/names.list");
+	name_list = GetFileThatMightBeRelative(name_file, 256, name_list);
 	char **names = get_labels(name_list);
 
 	image **alphabet = load_alphabet();

@@ -805,7 +805,10 @@ void output_detections(detection* dets, int num_boxes, float threshold,
 int count_people(detection* dets, int num_boxes, float threshold, char** names);
 void output_people(int number_of_people, const char* inputFilename,
     const char* outputFilename);
-
 void output_no_detections(int full_json, const char* filename);
+
+char* FileInHome(char* buffer, size_t buffer_size, const char* relative_path);
+char* FileInCV(char* buffer, size_t buffer_size, const char* relative_path);
+char* FileInDarknet(char* buffer, size_t buffer_size, const char* relative_path);
 
 #endif
