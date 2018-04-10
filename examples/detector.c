@@ -546,7 +546,7 @@ char* GetFileThatMightBeRelative(char* buffer, size_t buff_size, char* path)
 {
 	switch (path[0]) {
 		case '~':
-			return FileInHome(buffer, buff_size, path);
+			return FileInHome(buffer, buff_size, path + 1);
 		case '/':
 			return path;
 	}
