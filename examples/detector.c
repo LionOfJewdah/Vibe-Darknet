@@ -729,11 +729,11 @@ void output_people(int number_of_people, const char* inputFilename,
 {
 	FILE* JSON = fopen(outputFilename, "w");
 	// uncomment this if you also want it on the command line output
-	printf("{\n"
+	/*printf("{\n"
 		" \"numberOfPeople\": %d,\n"
 		" \"image\": \"%s\"\n"
 		"}\n", number_of_people, inputFilename
-	);
+	);*/
 	fprintf(JSON, "{\n"
 		" \"numberOfPeople\": %d,\n"
 		" \"image\": \"%s\"\n"
@@ -760,11 +760,8 @@ bool output_detection(detection* det, char** names, float threshold,
 	bool foundAnything = false;
 	for (int idx = 0; idx < det->classes; ++idx) {
 		if (det->prob[idx] > threshold) {
-			if (foundAnything == false) {
-				foundAnything = true;
-			}
 			if (full_json) {
-				if (foundAnything) {
+				if (!foundAnything) {
 					printf("{ \"x\": %f, \"y\": %f, \"dx\": %f, \"dy\": %f, ",
 						det->bbox.x, det->bbox.y, det->bbox.w, det->bbox.h);
 					begin_prediction_json_array();
@@ -776,11 +773,14 @@ bool output_detection(detection* det, char** names, float threshold,
 					   "}", names[idx], det->prob[idx]*100
 				);
 			}
+			if (foundAnything == false) {
+				foundAnything = true;
+			}
 		}
 
 	}
 	if (foundAnything && full_json) {
-		end_json_array();
+		puts("]}");
 	}
 	return foundAnything;
 }
@@ -822,6 +822,6 @@ void output_no_detections(int full_json, const char* filename) {
 		);
 	}
 	else {
-		puts("{count: 0}");
+		puts("{\"count\": 0}");
 	}
 }
