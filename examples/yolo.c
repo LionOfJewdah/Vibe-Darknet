@@ -1,6 +1,10 @@
 #include "darknet.h"
 
-char *voc_names[] = {"aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"};
+char *voc_names[] = {
+    "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat",
+    "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person",
+    "pottedplant", "sheep", "sofa", "train", "tvmonitor"
+};
 
 void train_yolo(char *cfgfile, char *weightfile)
 {
@@ -11,7 +15,8 @@ void train_yolo(char *cfgfile, char *weightfile)
     printf("%s\n", base);
     float avg_loss = -1;
     network *net = load_network(cfgfile, weightfile, 0);
-    printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate, net->momentum, net->decay);
+    printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate,
+        net->momentum, net->decay);
     int imgs = net->batch*net->subdivisions;
     int i = *net->seen/imgs;
     data train, buffer;
@@ -61,7 +66,8 @@ void train_yolo(char *cfgfile, char *weightfile)
         if (avg_loss < 0) avg_loss = loss;
         avg_loss = avg_loss*.9 + loss*.1;
 
-        printf("%d: %f, %f avg, %f rate, %lf seconds, %d images\n", i, loss, avg_loss, get_current_rate(net), sec(clock()-time), i*imgs);
+        printf("%d: %f, %f avg, %f rate, %lf seconds, %d images\n", i,
+            loss, avg_loss, get_current_rate(net), sec(clock()-time), i*imgs);
         if(i%1000==0 || (i < 1000 && i%100 == 0)){
             char buff[256];
             sprintf(buff, "%s/%s_%d.weights", backup_directory, base, i);
@@ -74,10 +80,11 @@ void train_yolo(char *cfgfile, char *weightfile)
     save_weights(net, buff);
 }
 
-void print_yolo_detections(FILE **fps, char *id, int total, int classes, int w, int h, detection *dets)
+void print_yolo_detections(FILE **fps, char *id, int total, int classes,
+    int w, int h, detection *dets)
 {
     int i, j;
-    for(i = 0; i < total; ++i){
+    for(i = 0; i < total; ++i) {
         float xmin = dets[i].bbox.x - dets[i].bbox.w/2.;
         float xmax = dets[i].bbox.x + dets[i].bbox.w/2.;
         float ymin = dets[i].bbox.y - dets[i].bbox.h/2.;
@@ -89,8 +96,10 @@ void print_yolo_detections(FILE **fps, char *id, int total, int classes, int w, 
         if (ymax > h) ymax = h;
 
         for(j = 0; j < classes; ++j){
-            if (dets[i].prob[j]) fprintf(fps[j], "%s %f %f %f %f %f\n", id, dets[i].prob[j],
+            if (dets[i].prob[j]) {
+                fprintf(fps[j], "%s %f %f %f %f %f\n", id, dets[i].prob[j],
                     xmin, ymin, xmax, ymax);
+            }
         }
     }
 }
@@ -254,7 +263,11 @@ void validate_yolo_recall(char *cfg, char *weights)
             }
         }
 
-        fprintf(stderr, "%5d %5d %5d\tRPs/Img: %.2f\tIOU: %.2f%%\tRecall:%.2f%%\n", i, correct, total, (float)proposals/(i+1), avg_iou*100/total, 100.*correct/total);
+        fprintf(stderr,
+            "%5d %5d %5d\tRPs/Img: %.2f\tIOU: %.2f%%\tRecall:%.2f%%\n",
+            i, correct, total, (float)proposals/(i+1), avg_iou*100/total,
+            100.*correct/total
+        );
         free_detections(dets, nboxes);
         free(id);
         free_image(orig);
@@ -327,5 +340,8 @@ void run_yolo(int argc, char **argv)
     else if(0==strcmp(argv[2], "train")) train_yolo(cfg, weights);
     else if(0==strcmp(argv[2], "valid")) validate_yolo(cfg, weights);
     else if(0==strcmp(argv[2], "recall")) validate_yolo_recall(cfg, weights);
-    else if(0==strcmp(argv[2], "demo")) demo(cfg, weights, thresh, cam_index, filename, voc_names, 20, frame_skip, prefix, avg, .5, 0,0,0,0);
+    else if(0==strcmp(argv[2], "demo")) {
+        demo(cfg, weights, thresh, cam_index, filename,
+            voc_names, 20, frame_skip, prefix, avg, .5, 0,0,0,0);
+    }
 }

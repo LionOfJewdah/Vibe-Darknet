@@ -2,23 +2,41 @@
 
 #include <stdio.h>
 
-char *coco_classes[] = {"person","bicycle","car","motorcycle","airplane","bus","train","truck","boat","traffic light","fire hydrant","stop sign","parking meter","bench","bird","cat","dog","horse","sheep","cow","elephant","bear","zebra","giraffe","backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard","sports ball","kite","baseball bat","baseball glove","skateboard","surfboard","tennis racket","bottle","wine glass","cup","fork","knife","spoon","bowl","banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza","donut","cake","chair","couch","potted plant","bed","dining table","toilet","tv","laptop","mouse","remote","keyboard","cell phone","microwave","oven","toaster","sink","refrigerator","book","clock","vase","scissors","teddy bear","hair drier","toothbrush"};
+char *coco_classes[] = {
+    "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train",
+    "truck", "boat", "traffic light", "fire hydrant", "stop sign",
+    "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
+    "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag",
+    "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball", "kite",
+    "baseball bat", "baseball glove", "skateboard", "surfboard",
+    "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon",
+    "bowl", "banana", "apple", "sandwich", "orange", "broccoli", "carrot",
+    "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant",
+    "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote",
+    "keyboard", "cell phone", "microwave", "oven", "toaster", "sink",
+    "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
+    "hair drier", "toothbrush"
+};
 
-int coco_ids[] = {1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,27,28,31,32,33,34,35,36,37,38,39,40,41,42,43,44,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,67,70,72,73,74,75,76,77,78,79,80,81,82,84,85,86,87,88,89,90};
+int coco_ids[] = {
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+    23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+    46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64,
+    65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88,
+    89, 90
+};
 
 void train_coco(char *cfgfile, char *weightfile)
 {
-    //char *train_images = "/home/pjreddie/data/voc/test/train.txt";
-    //char *train_images = "/home/pjreddie/data/coco/train.txt";
-    char *train_images = "data/coco.trainval.txt";
-    //char *train_images = "data/bags.train.list";
+    char *train_images = "data/coco.trainval.txt"; //"data/bags.train.list";
     char *backup_directory = "/home/pjreddie/backup/";
     srand(time(0));
     char *base = basecfg(cfgfile);
     printf("%s\n", base);
     float avg_loss = -1;
     network *net = load_network(cfgfile, weightfile, 0);
-    printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate, net->momentum, net->decay);
+    printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate,
+        net->momentum, net->decay);
     int imgs = net->batch*net->subdivisions;
     int i = *net->seen/imgs;
     data train, buffer;
@@ -53,8 +71,8 @@ void train_coco(char *cfgfile, char *weightfile)
 
     pthread_t load_thread = load_data_in_thread(args);
     clock_t time;
-    //while(i*imgs < N*120){
-    while(get_current_batch(net) < net->max_batches){
+    //while(i*imgs < N*120) {
+    while(get_current_batch(net) < net->max_batches) {
         i += 1;
         time=clock();
         pthread_join(load_thread, 0);
@@ -76,13 +94,14 @@ void train_coco(char *cfgfile, char *weightfile)
         if (avg_loss < 0) avg_loss = loss;
         avg_loss = avg_loss*.9 + loss*.1;
 
-        printf("%d: %f, %f avg, %f rate, %lf seconds, %d images\n", i, loss, avg_loss, get_current_rate(net), sec(clock()-time), i*imgs);
-        if(i%1000==0 || (i < 1000 && i%100 == 0)){
+        printf("%d: %f, %f avg, %f rate, %lf seconds, %d images\n",
+            i, loss, avg_loss, get_current_rate(net), sec(clock()-time), i*imgs);
+        if(i%1000==0 || (i < 1000 && i%100 == 0)) {
             char buff[256];
             sprintf(buff, "%s/%s_%d.weights", backup_directory, base, i);
             save_weights(net, buff);
         }
-        if(i%100==0){
+        if(i%100==0) {
             char buff[256];
             sprintf(buff, "%s/%s.backup", backup_directory, base);
             save_weights(net, buff);
@@ -97,7 +116,7 @@ void train_coco(char *cfgfile, char *weightfile)
 static void print_cocos(FILE *fp, int image_id, detection *dets, int num_boxes, int classes, int w, int h)
 {
     int i, j;
-    for(i = 0; i < num_boxes; ++i){
+    for (i = 0; i < num_boxes; ++i) {
         float xmin = dets[i].bbox.x - dets[i].bbox.w/2.;
         float xmax = dets[i].bbox.x + dets[i].bbox.w/2.;
         float ymin = dets[i].bbox.y - dets[i].bbox.h/2.;
@@ -113,8 +132,12 @@ static void print_cocos(FILE *fp, int image_id, detection *dets, int num_boxes, 
         float bw = xmax - xmin;
         float bh = ymax - ymin;
 
-        for(j = 0; j < classes; ++j){
-            if (dets[i].prob[j]) fprintf(fp, "{\"image_id\":%d, \"category_id\":%d, \"bbox\":[%f, %f, %f, %f], \"score\":%f},\n", image_id, coco_ids[j], bx, by, bw, bh, dets[i].prob[j]);
+        for (j = 0; j < classes; ++j) {
+            if (dets[i].prob[j]) {
+                fprintf(fp, "{\"image_id\":%d, \"category_id\":%d, "
+                    "\"bbox\":[%f, %f, %f, %f], \"score\":%f},\n", image_id,
+                    coco_ids[j], bx, by, bw, bh, dets[i].prob[j]);
+            }
         }
     }
 }
@@ -129,13 +152,12 @@ void validate_coco(char *cfg, char *weights)
 {
     network *net = load_network(cfg, weights, 0);
     set_batch_network(net, 1);
-    fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate, net->momentum, net->decay);
+    fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n",
+        net->learning_rate, net->momentum, net->decay);
     srand(time(0));
 
     char *base = "results/";
     list *plist = get_paths("data/coco_val_5k.list");
-    //list *plist = get_paths("/home/pjreddie/data/people-art/test.txt");
-    //list *plist = get_paths("/home/pjreddie/data/voc/test/2007_test.txt");
     char **paths = (char **)list_to_array(plist);
 
     layer l = net->layers[net->n-1];
@@ -166,27 +188,27 @@ void validate_coco(char *cfg, char *weights)
     args.h = net->h;
     args.type = IMAGE_DATA;
 
-    for(t = 0; t < nthreads; ++t){
+    for (t = 0; t < nthreads; ++t) {
         args.path = paths[i+t];
         args.im = &buf[t];
         args.resized = &buf_resized[t];
         thr[t] = load_data_in_thread(args);
     }
     time_t start = time(0);
-    for(i = nthreads; i < m+nthreads; i += nthreads){
+    for (i = nthreads; i < m+nthreads; i += nthreads) {
         fprintf(stderr, "%d\n", i);
-        for(t = 0; t < nthreads && i+t-nthreads < m; ++t){
+        for (t = 0; t < nthreads && i+t-nthreads < m; ++t) {
             pthread_join(thr[t], 0);
             val[t] = buf[t];
             val_resized[t] = buf_resized[t];
         }
-        for(t = 0; t < nthreads && i+t < m; ++t){
+        for (t = 0; t < nthreads && i+t < m; ++t) {
             args.path = paths[i+t];
             args.im = &buf[t];
             args.resized = &buf_resized[t];
             thr[t] = load_data_in_thread(args);
         }
-        for(t = 0; t < nthreads && i+t-nthreads < m; ++t){
+        for (t = 0; t < nthreads && i+t-nthreads < m; ++t) {
             char *path = paths[i+t-nthreads];
             int image_id = get_coco_image_id(path);
             float *X = val_resized[t].data;
@@ -213,7 +235,8 @@ void validate_coco_recall(char *cfgfile, char *weightfile)
 {
     network *net = load_network(cfgfile, weightfile, 0);
     set_batch_network(net, 1);
-    fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate, net->momentum, net->decay);
+    fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n",
+        net->learning_rate, net->momentum, net->decay);
     srand(time(0));
 
     char *base = "results/comp4_det_test_";
@@ -226,7 +249,7 @@ void validate_coco_recall(char *cfgfile, char *weightfile)
 
     int j, k;
     FILE **fps = calloc(classes, sizeof(FILE *));
-    for(j = 0; j < classes; ++j){
+    for (j = 0; j < classes; ++j) {
         char buff[1024];
         snprintf(buff, 1024, "%s%s.txt", base, coco_classes[j]);
         fps[j] = fopen(buff, "w");
@@ -244,7 +267,7 @@ void validate_coco_recall(char *cfgfile, char *weightfile)
     int proposals = 0;
     float avg_iou = 0;
 
-    for(i = 0; i < m; ++i){
+    for (i = 0; i < m; ++i) {
         char *path = paths[i];
         image orig = load_image_color(path, 0, 0);
         image sized = resize_image(orig, net->w, net->h);
@@ -263,8 +286,8 @@ void validate_coco_recall(char *cfgfile, char *weightfile)
 
         int num_labels = 0;
         box_label *truth = read_boxes(labelpath, &num_labels);
-        for(k = 0; k < side*side*l.n; ++k){
-            if(dets[k].objectness > thresh){
+        for (k = 0; k < side*side*l.n; ++k) {
+            if(dets[k].objectness > thresh) {
                 ++proposals;
             }
         }
@@ -272,19 +295,20 @@ void validate_coco_recall(char *cfgfile, char *weightfile)
             ++total;
             box t = {truth[j].x, truth[j].y, truth[j].w, truth[j].h};
             float best_iou = 0;
-            for(k = 0; k < side*side*l.n; ++k){
+            for (k = 0; k < side*side*l.n; ++k) {
                 float iou = box_iou(dets[k].bbox, t);
-                if(dets[k].objectness > thresh && iou > best_iou){
+                if(dets[k].objectness > thresh && iou > best_iou) {
                     best_iou = iou;
                 }
             }
             avg_iou += best_iou;
-            if(best_iou > iou_thresh){
+            if(best_iou > iou_thresh) {
                 ++correct;
             }
         }
         free_detections(dets, nboxes);
-        fprintf(stderr, "%5d %5d %5d\tRPs/Img: %.2f\tIOU: %.2f%%\tRecall:%.2f%%\n", i, correct, total, (float)proposals/(i+1), avg_iou*100/total, 100.*correct/total);
+        fprintf(stderr, "%5d %5d %5d\tRPs/Img: %.2f\tIOU: %.2f%%\tRecall:%.2f%%\n",
+            i, correct, total, (float)proposals/(i+1), avg_iou*100/total, 100.*correct/total);
         free(id);
         free_image(orig);
         free_image(sized);
@@ -302,8 +326,8 @@ void test_coco(char *cfgfile, char *weightfile, char *filename, float thresh)
     clock_t time;
     char buff[256];
     char *input = buff;
-    while(1){
-        if(filename){
+    while(1) {
+        if(filename) {
             strncpy(input, filename, 256);
         } else {
             printf("Enter Image Path: ");
@@ -344,7 +368,7 @@ void run_coco(int argc, char **argv)
     int cam_index = find_int_arg(argc, argv, "-c", 0);
     int frame_skip = find_int_arg(argc, argv, "-s", 0);
 
-    if(argc < 4){
+    if(argc < 4) {
         fprintf(stderr, "usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n", argv[0], argv[1]);
         return;
     }
@@ -357,5 +381,8 @@ void run_coco(int argc, char **argv)
     else if(0==strcmp(argv[2], "train")) train_coco(cfg, weights);
     else if(0==strcmp(argv[2], "valid")) validate_coco(cfg, weights);
     else if(0==strcmp(argv[2], "recall")) validate_coco_recall(cfg, weights);
-    else if(0==strcmp(argv[2], "demo")) demo(cfg, weights, thresh, cam_index, filename, coco_classes, 80, frame_skip, prefix, avg, .5, 0,0,0,0);
+    else if(0==strcmp(argv[2], "demo")) { 
+        demo(cfg, weights, thresh, cam_index, filename, coco_classes, 80,
+            frame_skip, prefix, avg, .5, 0,0,0,0);
+    }
 }

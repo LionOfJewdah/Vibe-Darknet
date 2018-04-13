@@ -21,7 +21,6 @@ float get_color(int c, int x, int max)
     int j = ceil(ratio);
     ratio -= i;
     float r = (1-ratio) * colors[i][c] + ratio*colors[j][c];
-    //printf("%f\n", r);
     return r;
 }
 
@@ -253,11 +252,14 @@ void draw_detections(image im, detection *dets, int num, float thresh,
                     strcat(labelstr, ", ");
                     strcat(labelstr, names[j]);
                 }
-                printf("%s: %.0f%%\n", names[j], dets[i].prob[j]*100);
+                // comment if you want to suppress predictions on command line,
+                // such as for Node
+                //fprintf(stderr, "%s: %.0f%%\n", names[j], dets[i].prob[j]*100);
             }
         }
         if (class >= 0) {
             int width = im.h * .006;
+            // uncomment if you want to see the percent confidences
             //printf("%d %s: %.0f%%\n", i, names[class], prob*100);
             int offset = class*123457 % classes;
             float red = get_color(2,offset,classes);
@@ -374,7 +376,8 @@ void ghost_image(image source, image dest, int dx, int dy)
     for (k = 0; k < source.c; ++k) {
         for (y = 0; y < source.h; ++y) {
             for (x = 0; x < source.w; ++x) {
-                float dist = sqrt((x - source.w/2. + .5)*(x - source.w/2. + .5) + (y - source.h/2. + .5)*(y - source.h/2. + .5));
+                float dist = sqrt((x - source.w/2. + .5)*(x - source.w/2. + .5)
+                    + (y - source.h/2. + .5)*(y - source.h/2. + .5));
                 float alpha = (1 - dist/max_dist);
                 if (alpha < 0) alpha = 0;
                 float v1 = get_pixel(source, x,y,k);
@@ -673,7 +676,8 @@ void save_image_jpg(image p, const char *name)
     for (y = 0; y < p.h; ++y) {
         for (x = 0; x < p.w; ++x) {
             for (k= 0; k < p.c; ++k) {
-                disp->imageData[y*step + x*p.c + k] = (unsigned char)(get_pixel(copy,x,y,k)*255);
+                disp->imageData[y*step + x*p.c + k] = 
+                    (unsigned char)(get_pixel(copy,x,y,k)*255);
             }
         }
     }
@@ -686,7 +690,6 @@ void save_image_jpg(image p, const char *name)
 void save_image_png(image im, const char *name)
 {
     char buff[256];
-    //sprintf(buff, "%s (%d)", name, windows);
     sprintf(buff, "%s.png", name);
     unsigned char *data = calloc(im.w*im.h*im.c, sizeof(char));
     int i,k;
@@ -697,7 +700,9 @@ void save_image_png(image im, const char *name)
     }
     int success = stbi_write_png(buff, im.w, im.h, im.c, data, im.w*im.c);
     free(data);
-    if (!success) fprintf(stderr, "Failed to write image %s\n", buff);
+    if (!success) {
+        fprintf(stderr, "Failed to write image %s\n", buff);
+    }
 }
 
 void save_image(image im, const char *name)
@@ -1432,7 +1437,8 @@ image load_image_stb(char *filename, int channels)
     int w, h, c;
     unsigned char *data = stbi_load(filename, &w, &h, &c, channels);
     if (!data) {
-        fprintf(stderr, "Cannot load image \"%s\"\nSTB Reason: %s\n", filename, stbi_failure_reason());
+        fprintf(stderr, "Cannot load image \"%s\"\nSTB Reason: %s\n",
+            filename, stbi_failure_reason());
         exit(0);
     }
     if (channels) c = channels;
@@ -1484,8 +1490,8 @@ image get_image_layer(image m, int l)
 void print_image(image m)
 {
     int i, j, k;
-    for (i =0 ; i < m.c; ++i) {
-        for (j =0 ; j < m.h; ++j) {
+    for (i = 0 ; i < m.c; ++i) {
+        for (j = 0 ; j < m.h; ++j) {
             for (k = 0; k < m.w; ++k) {
                 printf("%.2lf, ", m.data[i*m.h*m.w + j*m.w + k]);
                 if (k > 30) break;
@@ -1580,15 +1586,6 @@ void show_image_normalized(image im, const char *name)
 void show_images(image *ims, int n, char *window)
 {
     image m = collapse_images_vert(ims, n);
-    /*
-       int w = 448;
-       int h = ((float)m.h/m.w) * 448;
-       if(h > 896){
-       h = 896;
-       w = ((float)m.w/m.h) * 896;
-       }
-       image sized = resize_image(m, w, h);
-     */
     normalize_image(m);
     save_image(m, window);
     show_image(m, window);

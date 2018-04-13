@@ -524,13 +524,13 @@ typedef struct detection{
     int sort_class;
 } detection;
 
-typedef struct matrix{
+typedef struct matrix {
     int rows, cols;
     float **vals;
 } matrix;
 
 
-typedef struct{
+typedef struct {
     int w, h;
     matrix X;
     matrix y;
@@ -546,7 +546,7 @@ typedef enum {
     REGRESSION_DATA, SEGMENTATION_DATA, INSTANCE_DATA
 } data_type;
 
-typedef struct load_args{
+typedef struct load_args {
     int threads;
     char **paths;
     char *path;
@@ -591,13 +591,13 @@ load_args get_base_args(network *net);
 
 void free_data(data d);
 
-typedef struct node{
+typedef struct node {
     void *val;
     struct node *next;
     struct node *prev;
 } node;
 
-typedef struct list{
+typedef struct list {
     int size;
     node *front;
     node *back;
@@ -800,11 +800,13 @@ size_t rand_size_t();
 float rand_normal();
 float rand_uniform(float min, float max);
 
+int NetworkVolume(const network* network);
 void output_detections(detection* dets, int num_boxes, float threshold, 
     int full_json, char** names, char* filename);
 int count_people(detection* dets, int num_boxes, float threshold, char** names);
-void output_people(int number_of_people, const char* inputFilename,
-    const char* outputFilename);
+void output_people(int number_of_people, const char* inputFilename);
+void output_people_to_json_file(int number_of_people,
+    const char* inputFilename, const char* outputFilename);
 void output_no_detections(int full_json, const char* filename);
 
 char* FileInHome(char* buffer, size_t buffer_size, const char* relative_path);
