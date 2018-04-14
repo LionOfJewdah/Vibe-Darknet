@@ -506,6 +506,16 @@ int main(int argc, char **argv)
     return 0;
 }
 
+char* GetFileThatMightBeRelative(char* buffer, size_t buff_size, char* path) {
+    switch (path[0]) {
+    case '~':
+        return FileInHome(buffer, buff_size, path + 1);
+    case '/':
+        return path;
+    }
+    return FileInDarknet(buffer, buff_size, path);
+}
+
 char* FileInHome(char* buffer, size_t buffer_size, const char* relative_path)
 {
     strncpy(buffer, getenv("HOME"), buffer_size);

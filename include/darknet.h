@@ -93,11 +93,11 @@ typedef enum {
     BLANK
 } LAYER_TYPE;
 
-typedef enum{
+typedef enum {
     SSE, MASKED, L1, SEG, SMOOTH,WGAN
 } COST_TYPE;
 
-typedef struct{
+typedef struct {
     int batch;
     float learning_rate;
     float momentum;
@@ -115,7 +115,7 @@ typedef struct network network;
 struct layer;
 typedef struct layer layer;
 
-struct layer{
+struct layer {
     LAYER_TYPE type;
     ACTIVATION activation;
     COST_TYPE cost_type;
@@ -426,7 +426,7 @@ typedef enum {
     CONSTANT, STEP, EXP, POLY, STEPS, SIG, RANDOM
 } learning_rate_policy;
 
-typedef struct network{
+typedef struct network {
     int n;
     int batch;
     size_t *seen;
@@ -511,7 +511,7 @@ typedef struct {
     float *data;
 } image;
 
-typedef struct{
+typedef struct {
     float x, y, w, h;
 } box;
 
@@ -579,9 +579,9 @@ typedef struct load_args {
     tree *hierarchy;
 } load_args;
 
-typedef struct{
+typedef struct {
     int id;
-    float x,y,w,h;
+    float x, y, w, h;
     float left, right, top, bottom;
 } box_label;
 
@@ -673,7 +673,9 @@ void rescale_weights(layer l, float scale, float trans);
 void rgbgr_weights(layer l);
 image *get_weights(layer l);
 
-void demo(char *cfgfile, char *weightfile, float thresh, int cam_index, const char *filename, char **names, int classes, int frame_skip, char *prefix, int avg, float hier_thresh, int w, int h, int fps, int fullscreen);
+void demo(char *cfgfile, char *weightfile, float thresh, int cam_index,
+	const char *filename, char **names, int classes, int frame_skip,
+	char *prefix, int avg, float hier_thresh, int w, int h, int fps, int fullscreen);
 void get_detection_detections(layer l, int w, int h, float thresh, detection *dets);
 
 char *option_find_str(list *l, char *key, char *def);
@@ -687,8 +689,10 @@ void save_weights_upto(network *net, char *filename, int cutoff);
 void load_weights_upto(network *net, char *filename, int start, int cutoff);
 
 void zero_objectness(layer l);
-void get_region_detections(layer l, int w, int h, int netw, int neth, float thresh, int *map, float tree_thresh, int relative, detection *dets);
-int get_yolo_detections(layer l, int w, int h, int netw, int neth, float thresh, int *map, int relative, detection *dets);
+void get_region_detections(layer l, int w, int h, int netw, int neth,
+	float thresh, int *map, float tree_thresh, int relative, detection *dets);
+int get_yolo_detections(layer l, int w, int h, int netw, int neth, float thresh,
+	int *map, int relative, detection *dets);
 void free_network(network *net);
 void set_batch_network(network *net, int b);
 void set_temp_network(network *net, float t);
@@ -734,7 +738,8 @@ float box_iou(box a, box b);
 data load_all_cifar10();
 box_label *read_boxes(char *filename, int *n);
 box float_to_box(float *f, int stride);
-void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes);
+void draw_detections(image im, detection *dets, int num, float thresh,
+	char **names, image **alphabet, int classes);
 
 matrix network_predict_data(network *net, data test);
 image **load_alphabet();
@@ -744,8 +749,10 @@ float *network_predict(network *net, float *input);
 int network_width(network *net);
 int network_height(network *net);
 float *network_predict_image(network *net, image im);
-void network_detect(network *net, image im, float thresh, float hier_thresh, float nms, detection *dets);
-detection *get_network_boxes(network *net, int w, int h, float thresh, float hier, int *map, int relative, int *num);
+void network_detect(network *net, image im, float thresh,
+	float hier_thresh, float nms, detection *dets);
+detection *get_network_boxes(network *net, int w, int h,
+	float thresh, float hier, int *map, int relative, int *num);
 void free_detections(detection *dets, int n);
 
 void reset_network_state(network *net, int b);
@@ -766,7 +773,8 @@ float train_network(network *net, data d);
 pthread_t load_data_in_thread(load_args args);
 void load_data_blocking(load_args args);
 list *get_paths(char *filename);
-void hierarchy_predictions(float *predictions, int n, tree *hier, int only_leaves, int stride);
+void hierarchy_predictions(float *predictions, int n,
+	tree *hier, int only_leaves, int stride);
 void change_leaves(tree *t, char *leaf_list);
 
 int find_int_arg(int argc, char **argv, char *arg, int def);
@@ -809,6 +817,7 @@ void output_people_to_json_file(int number_of_people,
     const char* inputFilename, const char* outputFilename);
 void output_no_detections(int full_json, const char* filename);
 
+char* GetFileThatMightBeRelative(char* buffer, size_t buff_size, char* path);
 char* FileInHome(char* buffer, size_t buffer_size, const char* relative_path);
 char* FileInCV(char* buffer, size_t buffer_size, const char* relative_path);
 char* FileInDarknet(char* buffer, size_t buffer_size, const char* relative_path);

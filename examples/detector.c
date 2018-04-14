@@ -2,19 +2,16 @@
 #include <time.h>
 
 static int coco_ids[] = {
-	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-	27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 51, 52,
-	53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 67, 70, 72, 73, 74, 75, 76,
-	77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+	23, 24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44,
+	46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64,
+	65, 67, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88,
+	89, 90
 };
 
-char* TimeAsString(char* buffer, size_t maxSize) {
-	time_t theTime = time(NULL);
-	strftime(buffer, maxSize, "%F_%H-%M-%S", localtime( &theTime));
-	return buffer;
-}
-
-void train_detector(char* datacfg, char* cfgfile, char* weightfile, int* gpus, int ngpus, int clear) {
+void train_detector(char* datacfg, char* cfgfile, char* weightfile, int* gpus,
+	int ngpus, int clear)
+{
 	list* options = read_data_cfg(datacfg);
 	char* train_images = option_find_str(options, "train", "data/train.list");
 	char* backup_directory = option_find_str(options, "backup", "/backup/");
@@ -145,7 +142,9 @@ static int get_coco_image_id(char* filename) {
 	return atoi(p + 1);
 }
 
-static void print_cocos(FILE* fp, char* image_path, detection* dets, int num_boxes, int classes, int w, int h) {
+static void print_cocos(FILE* fp, char* image_path, detection* dets,
+	int num_boxes, int classes, int w, int h)
+{
 	int i, j;
 	int image_id = get_coco_image_id(image_path);
 	for (i = 0; i < num_boxes; ++i) {
@@ -175,7 +174,9 @@ static void print_cocos(FILE* fp, char* image_path, detection* dets, int num_box
 	}
 }
 
-void print_detector_detections(FILE** fps, char* id, detection* dets, int total, int classes, int w, int h) {
+void print_detector_detections(FILE** fps, char* id, detection* dets,
+	int total, int classes, int w, int h)
+{
 	int i, j;
 	for (i = 0; i < total; ++i) {
 		float xmin = dets[i].bbox.x - dets[i].bbox.w / 2. + 1;
@@ -197,7 +198,9 @@ void print_detector_detections(FILE** fps, char* id, detection* dets, int total,
 	}
 }
 
-void print_imagenet_detections(FILE* fp, int id, detection* dets, int total, int classes, int w, int h) {
+void print_imagenet_detections(FILE* fp, int id, detection* dets,
+	int total, int classes, int w, int h)
+{
 	int i, j;
 	for (i = 0; i < total; ++i) {
 		float xmin = dets[i].bbox.x - dets[i].bbox.w / 2.;
@@ -220,7 +223,9 @@ void print_imagenet_detections(FILE* fp, int id, detection* dets, int total, int
 	}
 }
 
-void validate_detector_flip(char* datacfg, char* cfgfile, char* weightfile, char* outfile) {
+void validate_detector_flip(char* datacfg, char* cfgfile, char* weightfile,
+	char* outfile)
+{
 	int j;
 	list* options = read_data_cfg(datacfg);
 	char* valid_images = option_find_str(options, "valid", "data/train.list");
@@ -351,10 +356,13 @@ void validate_detector_flip(char* datacfg, char* cfgfile, char* weightfile, char
 		fprintf(fp, "\n]\n");
 		fclose(fp);
 	}
-	fprintf(stderr, "Total Detection Time: %f Seconds\n", what_time_is_it_now() - start);
+	fprintf(stderr, "Total Detection Time: %f Seconds\n",
+		what_time_is_it_now() - start);
 }
 
-void validate_detector(char* datacfg, char* cfgfile, char* weightfile, char* outfile) {
+void validate_detector(char* datacfg, char* cfgfile, char* weightfile,
+	char* outfile)
+{
 	int j;
 	list* options = read_data_cfg(datacfg);
 	char* valid_images = option_find_str(options, "valid", "data/train.list");
@@ -367,7 +375,8 @@ void validate_detector(char* datacfg, char* cfgfile, char* weightfile, char* out
 
 	network* net = load_network(cfgfile, weightfile, 0);
 	set_batch_network(net, 1);
-	fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n", net->learning_rate, net->momentum, net->decay);
+	fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n",
+		net->learning_rate, net->momentum, net->decay);
 	srand(time(0));
 
 	list* plist = get_paths(valid_images);
@@ -450,12 +459,14 @@ void validate_detector(char* datacfg, char* cfgfile, char* weightfile, char* out
 			int w = val[t].w;
 			int h = val[t].h;
 			int nboxes = 0;
-			detection* dets = get_network_boxes(net, w, h, thresh, .5, map, 0, &nboxes);
+			detection* dets = get_network_boxes(net, w, h, thresh,
+				.5, map, 0, &nboxes);
 			if (nms) do_nms_sort(dets, nboxes, classes, nms);
 			if (coco) {
 				print_cocos(fp, path, dets, nboxes, classes, w, h);
 			} else if (imagenet) {
-				print_imagenet_detections(fp, i + t - nthreads + 1, dets, nboxes, classes, w, h);
+				print_imagenet_detections(fp, i + t - nthreads + 1,
+					dets, nboxes, classes, w, h);
 			} else {
 				print_detector_detections(fps, id, dets, nboxes, classes, w, h);
 			}
@@ -513,7 +524,8 @@ void validate_detector_recall(char* cfgfile, char* weightfile) {
 		char* id = basecfg(path);
 		network_predict(net, sized.data);
 		int nboxes = 0;
-		detection* dets = get_network_boxes(net, sized.w, sized.h, thresh, .5, 0, 1, &nboxes);
+		detection* dets = get_network_boxes(net, sized.w, sized.h, thresh,
+			.5, 0, 1, &nboxes);
 		if (nms) do_nms_obj(dets, nboxes, 1, nms);
 
 		char labelpath[4096];
@@ -552,22 +564,16 @@ void validate_detector_recall(char* cfgfile, char* weightfile) {
 
 		fprintf(stderr,
 			"%5d %5d %5d\tRPs/Img: %.2f\tIOU: %.2f%%\tRecall:%.2f%%\n",
-			i, correct, total, (float) proposals / (i + 1), avg_iou* 100 / total,
-			100. * correct / total);
+			i, correct, total, (float) proposals / (i + 1), 
+			avg_iou* 100 / total, 100. * correct / total);
 		free(id);
 		free_image(orig);
 		free_image(sized);
 	}
 }
 
-char* GetFileThatMightBeRelative(char* buffer, size_t buff_size, char* path) {
-	switch (path[0]) {
-	case '~':
-		return FileInHome(buffer, buff_size, path + 1);
-	case '/':
-		return path;
-	}
-	return FileInDarknet(buffer, buff_size, path);
+void terminate_json() {
+	puts("]");
 }
 
 void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filename,
@@ -575,7 +581,8 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 {
 	list* options = read_data_cfg(datacfg);
 	char name_file[256];
-	char* name_list = option_find_str(options, "names", DARKNET_DIR "data/names.list");
+	char* name_list = option_find_str(options, "names",
+		DARKNET_DIR "data/names.list");
 	name_list = GetFileThatMightBeRelative(name_file, 256, name_list);
 	char** names = get_labels(name_list);
 
@@ -583,16 +590,16 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 	network* net = load_network(cfgfile, weightfile, 0);
 	set_batch_network(net, 1);
 	srand(2222222);
-	double time, calcTime;
+	double time;
 	char buff[256];
 	char* input = buff;
 	char output_buffer[256] = "predictions";
-	char json_output_filename[256] = DARKNET_DIR;
-	const int darknet_offset = sizeof(DARKNET_DIR) - 1;
 	if (!outImage) {
 		outImage = output_buffer;
 	}
 	float nms = .45;
+	putchar('[');
+	int prediction = 1;
 	while (1) {
 		if (filename) {
 			strncpy(input, filename, 256);
@@ -600,12 +607,15 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 			fprintf(stderr, "Enter Image Path: ");
 			fflush(stderr);
 			input = fgets(input, 256, stdin);
-			if (!input) {
+			if (!input || input[0] == '\n') {
+				terminate_json();
 				return;
 			}
-			char timeBuffer[50];
-			snprintf(output_buffer, 256, "result_%s", TimeAsString(timeBuffer, 50));
 			strtok(input, "\n");
+			if (prediction > 1) {
+				putchar(',');
+			}
+			snprintf(output_buffer, 256, "result_%.03d", prediction++);
 		}
 		image im = load_image_color(input, 0, 0);
 		image sized = letterbox_image(im, net->w, net->h);
@@ -615,26 +625,16 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 		float* X = sized.data;
 		time = what_time_is_it_now();
 		network_predict(net, X);
-		calcTime = what_time_is_it_now();
 		fprintf(stderr, "%s: Predicted in %f seconds.\n",
-			input, calcTime - time);
+			input, what_time_is_it_now() - time);
 		int nboxes = 0;
 		detection* dets = get_network_boxes(net, im.w, im.h, thresh,
 			hier_thresh, 0, 1, &nboxes);
 
 		if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
 		if (nboxes) {
-			// uncomment this if you want the JSON output of different detections than people
-			//output_detections(dets, nboxes, thresh, full_json, names, input);
 			int number_of_people = count_people(dets, nboxes, thresh, names);
 			output_people(number_of_people, input);
-			if (full_json) {
-				char timeBuffer[50];
-				snprintf(json_output_filename + darknet_offset, 256 - darknet_offset,
-					"JSON/result_%s.json", TimeAsString(timeBuffer, 50));
-				output_people_to_json_file(number_of_people, input,
-					json_output_filename);
-			}
 		} else {
 			output_no_detections(full_json, input);
 		}
@@ -651,8 +651,10 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 #endif
 		free_image(im);
 		free_image(sized);
-		if (filename)
+		if (filename) {
+			terminate_json();
 			break;
+		}
 	}
 }
 
@@ -664,8 +666,8 @@ void run_detector(int argc, char** argv) {
 	int frame_skip = find_int_arg(argc, argv, "-s", 0);
 	int avg = find_int_arg(argc, argv, "-avg", 3);
 	if (argc < 4) {
-		fprintf(stderr, "usage: %s %s [train/test/valid] [cfg] [weights (optional)]\n",
-			argv[0], argv[1]);
+		fprintf(stderr, "usage: %s %s [train/test/valid] "
+			"[cfg] [weights (optional)]\n", argv[0], argv[1]);
 		return;
 	}
 	char* gpu_list = find_char_arg(argc, argv, "-gpus", 0);
@@ -706,17 +708,25 @@ void run_detector(int argc, char** argv) {
 		test_detector(datacfg, cfg, weights, filename, thresh,
 			hier_thresh, outfile, fullscreen);
 	}
-	else if (strcmp(argv[2], "train") == 0) train_detector(datacfg, cfg, weights, gpus, ngpus, clear);
-	else if (strcmp(argv[2], "valid") == 0) validate_detector(datacfg, cfg, weights, outfile);
-	else if (strcmp(argv[2], "valid2") == 0) validate_detector_flip(datacfg, cfg, weights, outfile);
-	else if (strcmp(argv[2], "recall") == 0) validate_detector_recall(cfg, weights);
+	else if (strcmp(argv[2], "train") == 0)
+		train_detector(datacfg, cfg, weights, gpus, ngpus, clear);
+	else if (strcmp(argv[2], "valid") == 0)
+		validate_detector(datacfg, cfg, weights, outfile);
+	else if (strcmp(argv[2], "valid2") == 0)
+		validate_detector_flip(datacfg, cfg, weights, outfile);
+	else if (strcmp(argv[2], "recall") == 0)
+		validate_detector_recall(cfg, weights);
 	else if (strcmp(argv[2], "demo") == 0) {
 		list* options = read_data_cfg(datacfg);
 		int classes = option_find_int(options, "classes", 20);
-		char* name_list = option_find_str(options, "names", "data/names.list");
+		char name_file [256];
+		char* name_list = option_find_str(options, "names",
+			DARKNET_DIR "data/names.list");
+		name_list = GetFileThatMightBeRelative(name_file, 256, name_list);
 		char** names = get_labels(name_list);
 		demo(cfg, weights, thresh, cam_index, filename, names, classes,
-			frame_skip, prefix, avg, hier_thresh, width, height, fps, fullscreen);
+			frame_skip, prefix, avg, hier_thresh, width, height, fps,
+			fullscreen);
 	}
 }
 
@@ -759,78 +769,6 @@ void output_people_to_json_file(int number_of_people, const char* inputFilename,
 		"}\n", number_of_people, inputFilename
 	);
 	fclose(JSON);
-}
-
-void begin_detection_json_array(void) {
-	puts("\"detections\": [");
-}
-
-void end_json_array(void) {
-	puts("]}");
-}
-
-void begin_prediction_json_array(void) {
-	puts("\"predictions\": [");
-}
-
-bool output_detection(detection* det, char** names, float threshold,
-	bool full_json) {
-	bool foundAnything = false;
-	for (int idx = 0; idx < det->classes; ++idx) {
-		if (det->prob[idx] > threshold) {
-			if (full_json) {
-				if (!foundAnything) {
-					printf("{ \"x\": %f, \"y\": %f, \"dx\": %f, \"dy\": %f, ",
-						det->bbox.x, det->bbox.y, det->bbox.w, det->bbox.h);
-					begin_prediction_json_array();
-				} else {
-					puts(", ");
-				}
-				printf("{"
-					"\"class\": %s, "
-					"\"confidence\": %f"
-					"}", names[idx], det->prob[idx] * 100
-				);
-			}
-			if (foundAnything == false) {
-				foundAnything = true;
-			}
-		}
-
-	}
-	if (foundAnything && full_json) {
-		puts("]}");
-	}
-	return foundAnything;
-}
-
-void output_detections(detection* dets, int num_boxes, float threshold,
-	int full_json, char** names, char* filename) {
-	int classes = dets[0].classes;
-	int* counts = (int*) malloc(classes* sizeof(int));
-	putchar('{');
-	if (full_json) {
-		begin_detection_json_array();
-	}
-	int detectionCount = 0;
-	bool shouldPrintCommaNextTime = false;
-	for (int i = 0; i < num_boxes; ++i) {
-		if (shouldPrintCommaNextTime) {
-			puts(", ");
-			shouldPrintCommaNextTime = false;
-		}
-		bool detected = output_detection(dets + i, names, threshold, full_json);
-		if (detected) {
-			++detectionCount;
-			shouldPrintCommaNextTime = full_json;
-		}
-	}
-	if (full_json) {
-		puts("],");
-	}
-	printf("\"count\": %d", detectionCount);
-	printf((filename ? ", \"image\": \"%s\"}\n" : "}\n"), filename);
-	free(counts);
 }
 
 void output_no_detections(int full_json, const char* filename)
