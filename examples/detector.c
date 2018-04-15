@@ -758,15 +758,15 @@ const char* FilenameOnly(const char* in) {
 }
 
 typedef struct VenueAndSensorInfo {
-	char name [128];
 	int venueID;
 	int sensorID;
+	char name [128];
 } VenueAndSensorInfo;
 
 VenueAndSensorInfo Origin(const char* filename) {
 	const char* image_name = FilenameOnly(filename);
 	VenueAndSensorInfo info;
-	sscanf(image_name, "%s %*s %d %*s %d", 
+	sscanf(image_name, "%s %d %d", 
 		info.name, &info.venueID, &info.sensorID);
 	return info;
 }
