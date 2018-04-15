@@ -609,6 +609,7 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 			input = fgets(input, 256, stdin);
 			if (!input || input[0] == '\n') {
 				terminate_json();
+				fputs("Exiting.\n", stderr);
 				return;
 			}
 			strtok(input, "\n");
@@ -636,7 +637,7 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 			int number_of_people = count_people(dets, nboxes, thresh, names);
 			output_people(number_of_people, input);
 		} else {
-			output_no_detections(full_json, input);
+			output_no_detections(input);
 		}
 		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
 		free_detections(dets, nboxes);
@@ -742,7 +743,8 @@ int HasPerson(detection* det, char** names, float threshold) {
 	return 0;
 }
 
-int count_people(detection* dets, int num_boxes, float threshold, char** names) {
+int count_people(detection* dets, int num_boxes, float threshold, char** names)
+{
 	int count = 0;
 	for (int idx = 0; idx < num_boxes; ++idx) {
 		count += HasPerson(dets + idx, names, threshold);
@@ -750,36 +752,53 @@ int count_people(detection* dets, int num_boxes, float threshold, char** names) 
 	return count;
 }
 
+const char* FilenameOnly(const char* in) {
+	const char* lastSlash = strrchr(in, '/');
+	return lastSlash ? lastSlash + 1 : in;
+}
+
+typedef struct VenueAndSensorInfo {
+	char name [128];
+	int venueID;
+	int sensorID;
+} VenueAndSensorInfo;
+
+VenueAndSensorInfo Origin(const char* filename) {
+	const char* image_name = FilenameOnly(filename);
+	VenueAndSensorInfo info;
+	sscanf(image_name, "%s %*s %d %*s %d", 
+		info.name, &info.venueID, &info.sensorID);
+	return info;
+}
+
+static const char JSON_schema [] = "{\n"
+" \"numberOfPeople\": %d,\n"
+" \"venueID\": %d,\n"
+" \"sensorID\": %d,\n"
+" \"venueName\": \"%s\"\n"
+"}\n";
+
 void output_people(int number_of_people, const char* inputFilename)
 {
-	printf("{\n"
-		" \"numberOfPeople\": %d,\n"
-		" \"image\": \"%s\"\n"
-		"}\n", number_of_people, inputFilename
-	);
+	VenueAndSensorInfo origin = Origin(inputFilename);
+	printf(JSON_schema, number_of_people, origin.venueID, origin.sensorID,
+		origin.name);
 }
 
 void output_people_to_json_file(int number_of_people, const char* inputFilename,
 	const char* outputFilename)
 {
 	FILE* JSON = fopen(outputFilename, "w");
-	fprintf(JSON, "{\n"
-		" \"numberOfPeople\": %d,\n"
-		" \"image\": \"%s\"\n"
-		"}\n", number_of_people, inputFilename
-	);
+	VenueAndSensorInfo origin = Origin(inputFilename);
+	fprintf(JSON, JSON_schema, number_of_people, origin.venueID,
+		origin.sensorID, origin.name);
 	fclose(JSON);
 }
 
-void output_no_detections(int full_json, const char* filename)
+void output_no_detections(const char* inputFilename)
 {
-	if (full_json) {
-		printf("{ \"detections\": [], \"numberOfPeople\": 0 %s%s}",
-			(filename ? "\"image\": " : ""), (filename ? filename : "")
-		);
-	} else {
-		puts("{\"numberOfPeople\": 0}");
-	}
+	VenueAndSensorInfo origin = Origin(inputFilename);
+	printf(JSON_schema, 0, origin.venueID, origin.sensorID, origin.name);
 }
 
 int NetworkVolume(const network* network) {
