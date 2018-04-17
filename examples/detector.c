@@ -758,8 +758,8 @@ const char* FilenameOnly(const char* in) {
 }
 
 typedef struct VenueAndSensorInfo {
-	int venueID;
-	int sensorID;
+	int venue_ID;
+	int sensor_ID;
 	char name [128];
 } VenueAndSensorInfo;
 
@@ -767,21 +767,21 @@ VenueAndSensorInfo Origin(const char* filename) {
 	const char* image_name = FilenameOnly(filename);
 	VenueAndSensorInfo info;
 	sscanf(image_name, "%s %d %d", 
-		info.name, &info.venueID, &info.sensorID);
+		info.name, &info.venue_ID, &info.sensor_ID);
 	return info;
 }
 
 static const char JSON_schema [] = "{\n"
 " \"numberOfPeople\": %d,\n"
-" \"venueID\": %d,\n"
-" \"sensorID\": %d,\n"
+" \"venue_ID\": %d,\n"
+" \"sensor_ID\": %d,\n"
 " \"venueName\": \"%s\"\n"
 "}\n";
 
 void output_people(int number_of_people, const char* inputFilename)
 {
 	VenueAndSensorInfo origin = Origin(inputFilename);
-	printf(JSON_schema, number_of_people, origin.venueID, origin.sensorID,
+	printf(JSON_schema, number_of_people, origin.venue_ID, origin.sensor_ID,
 		origin.name);
 }
 
@@ -790,15 +790,15 @@ void output_people_to_json_file(int number_of_people, const char* inputFilename,
 {
 	FILE* JSON = fopen(outputFilename, "w");
 	VenueAndSensorInfo origin = Origin(inputFilename);
-	fprintf(JSON, JSON_schema, number_of_people, origin.venueID,
-		origin.sensorID, origin.name);
+	fprintf(JSON, JSON_schema, number_of_people, origin.venue_ID,
+		origin.sensor_ID, origin.name);
 	fclose(JSON);
 }
 
 void output_no_detections(const char* inputFilename)
 {
 	VenueAndSensorInfo origin = Origin(inputFilename);
-	printf(JSON_schema, 0, origin.venueID, origin.sensorID, origin.name);
+	printf(JSON_schema, 0, origin.venue_ID, origin.sensor_ID, origin.name);
 }
 
 int NetworkVolume(const network* network) {
