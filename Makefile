@@ -75,6 +75,8 @@ DEPS = $(wildcard src/*.h) Makefile include/darknet.h
 #all: obj backup results $(SLIB) $(ALIB) $(EXEC)
 all: obj  results $(SLIB) $(ALIB) $(EXEC)
 
+$(OBJDIR)darknet.o: include/vibe_darknet.h
+$(OBJDIR)detector.o: include/vibe_darknet.h
 
 $(EXEC): $(EXECOBJ) $(ALIB)
 	$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS) $(ALIB)

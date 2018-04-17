@@ -32,7 +32,7 @@ extern int gpu_index;
     #endif
 #endif
 
-typedef struct{
+typedef struct {
     int classes;
     char **names;
 } metadata;
@@ -53,11 +53,12 @@ typedef struct{
 } tree;
 tree *read_tree(char *filename);
 
-typedef enum{
-    LOGISTIC, RELU, RELIE, LINEAR, RAMP, TANH, PLSE, LEAKY, ELU, LOGGY, STAIR, HARDTAN, LHTAN
+typedef enum {
+    LOGISTIC, RELU, RELIE, LINEAR, RAMP, TANH,
+    PLSE, LEAKY, ELU, LOGGY, STAIR, HARDTAN, LHTAN
 } ACTIVATION;
 
-typedef enum{
+typedef enum {
     MULT, ADD, SUB, DIV
 } BINARY_ACTIVATION;
 
@@ -94,7 +95,7 @@ typedef enum {
 } LAYER_TYPE;
 
 typedef enum {
-    SSE, MASKED, L1, SEG, SMOOTH,WGAN
+    SSE, MASKED, L1, SEG, SMOOTH, WGAN
 } COST_TYPE;
 
 typedef struct {
@@ -109,13 +110,10 @@ typedef struct {
     int t;
 } update_args;
 
-struct network;
 typedef struct network network;
-
-struct layer;
 typedef struct layer layer;
 
-struct layer {
+typedef struct layer {
     LAYER_TYPE type;
     ACTIVATION activation;
     COST_TYPE cost_type;
@@ -416,9 +414,9 @@ struct layer {
     cudnnConvolutionFwdAlgo_t fw_algo;
     cudnnConvolutionBwdDataAlgo_t bd_algo;
     cudnnConvolutionBwdFilterAlgo_t bf_algo;
-#endif
-#endif
-};
+#endif // CUDNN
+#endif // GPU
+} layer;
 
 void free_layer(layer);
 
@@ -515,7 +513,7 @@ typedef struct {
     float x, y, w, h;
 } box;
 
-typedef struct detection{
+typedef struct detection {
     box bbox;
     int classes;
     float *prob;
@@ -592,15 +590,15 @@ load_args get_base_args(network *net);
 void free_data(data d);
 
 typedef struct node {
-    void *val;
-    struct node *next;
-    struct node *prev;
+	void *val;
+	struct node *next;
+	struct node *prev;
 } node;
 
 typedef struct list {
-    int size;
-    node *front;
-    node *back;
+	int size;
+	node *front;
+	node *back;
 } list;
 
 pthread_t load_data(load_args args);
@@ -621,7 +619,8 @@ void axpy_cpu(int N, float ALPHA, float *X, int INCX, float *Y, int INCY);
 void copy_cpu(int N, float *X, int INCX, float *Y, int INCY);
 void scal_cpu(int N, float ALPHA, float *X, int INCX);
 void fill_cpu(int N, float ALPHA, float * X, int INCX);
-void normalize_cpu(float *x, float *mean, float *variance, int batch, int filters, int spatial);
+void normalize_cpu(float *x, float *mean, float *variance, int batch,
+	int filters, int spatial);
 void softmax(float *input, int n, float temp, int stride, float *output);
 
 int best_3d_shift_r(image a, image b, int min, int max);
@@ -675,8 +674,10 @@ image *get_weights(layer l);
 
 void demo(char *cfgfile, char *weightfile, float thresh, int cam_index,
 	const char *filename, char **names, int classes, int frame_skip,
-	char *prefix, int avg, float hier_thresh, int w, int h, int fps, int fullscreen);
-void get_detection_detections(layer l, int w, int h, float thresh, detection *dets);
+	char *prefix, int avg, float hier_thresh, int w, int h, int fps,
+    int fullscreen);
+void get_detection_detections(layer l, int w, int h, float thresh,
+    detection *dets);
 
 char *option_find_str(list *l, char *key, char *def);
 int option_find_int(list *l, char *key, int def);
@@ -807,17 +808,5 @@ int *read_intlist(char *s, int *n, int d);
 size_t rand_size_t();
 float rand_normal();
 float rand_uniform(float min, float max);
-
-int NetworkVolume(const network* network);
-int count_people(detection* dets, int num_boxes, float threshold, char** names);
-void output_people(int number_of_people, const char* inputFilename);
-void output_people_to_json_file(int number_of_people,
-    const char* inputFilename, const char* outputFilename);
-void output_no_detections(const char* inputFilename);
-
-char* GetFileThatMightBeRelative(char* buffer, size_t buff_size, char* path);
-char* FileInHome(char* buffer, size_t buffer_size, const char* relative_path);
-char* FileInCV(char* buffer, size_t buffer_size, const char* relative_path);
-char* FileInDarknet(char* buffer, size_t buffer_size, const char* relative_path);
 
 #endif

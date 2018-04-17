@@ -1,4 +1,5 @@
 #include "darknet.h"
+#include "vibe_darknet.h"
 #include <time.h>
 
 static int coco_ids[] = {
