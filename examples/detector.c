@@ -565,7 +565,7 @@ void validate_detector_recall(char* cfgfile, char* weightfile) {
 
 		fprintf(stderr,
 			"%5d %5d %5d\tRPs/Img: %.2f\tIOU: %.2f%%\tRecall:%.2f%%\n",
-			i, correct, total, (float) proposals / (i + 1), 
+			i, correct, total, (float) proposals / (i + 1),
 			avg_iou* 100 / total, 100. * correct / total);
 		free(id);
 		free_image(orig);
@@ -573,12 +573,21 @@ void validate_detector_recall(char* cfgfile, char* weightfile) {
 	}
 }
 
-void terminate_json() {
-	puts("]");
+inline void begin_json_array() {
+	//putchar('[');
 }
 
-void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filename,
-	float thresh, float hier_thresh, char* outImage, int full_json)
+inline void terminate_json() {
+	//puts("]");
+}
+
+inline void append_comma() {
+	//putchar(',');
+}
+
+void test_detector(char* datacfg, char* cfgfile, char* weightfile,
+	char* sourceImagePath, float thresh, float hier_thresh, char* outImage,
+	int fullscreen)
 {
 	list* options = read_data_cfg(datacfg);
 	char name_file[256];
@@ -599,11 +608,11 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 		outImage = output_buffer;
 	}
 	float nms = .45;
-	putchar('[');
+	begin_json_array();
 	int prediction = 1;
 	while (1) {
-		if (filename) {
-			strncpy(input, filename, 256);
+		if (sourceImagePath) {
+			strncpy(input, sourceImagePath, 256);
 		} else {
 			fprintf(stderr, "Enter Image Path: ");
 			fflush(stderr);
@@ -615,7 +624,7 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 			}
 			strtok(input, "\n");
 			if (prediction > 1) {
-				putchar(',');
+				append_comma();
 			}
 			snprintf(output_buffer, 256, "result_%.03d", prediction++);
 		}
@@ -644,7 +653,7 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 		free_detections(dets, nboxes);
 		save_image(im, outImage);
 #ifdef OPENCV
-		if (filename) {
+		if (sourceImagePath) {
 			cvNamedWindow("predictions", CV_WINDOW_NORMAL);
 			show_image(im, "predictions");
 			cvWaitKey(0);
@@ -653,7 +662,7 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile, char* filenam
 #endif
 		free_image(im);
 		free_image(sized);
-		if (filename) {
+		if (sourceImagePath) {
 			terminate_json();
 			break;
 		}
@@ -767,7 +776,7 @@ typedef struct VenueAndSensorInfo {
 VenueAndSensorInfo Origin(const char* filename) {
 	const char* image_name = FilenameOnly(filename);
 	VenueAndSensorInfo info;
-	sscanf(image_name, "%s %d %d", 
+	sscanf(image_name, "%s %d %d",
 		info.name, &info.venue_ID, &info.sensor_ID);
 	return info;
 }
@@ -784,10 +793,11 @@ void output_people(int number_of_people, const char* inputFilename)
 	VenueAndSensorInfo origin = Origin(inputFilename);
 	printf(JSON_schema, number_of_people, origin.venue_ID, origin.sensor_ID,
 		origin.name);
+	fflush(stdout);
 }
 
-void output_people_to_json_file(int number_of_people, const char* inputFilename,
-	const char* outputFilename)
+void output_people_to_json_file(int number_of_people,
+	const char* inputFilename, const char* outputFilename)
 {
 	FILE* JSON = fopen(outputFilename, "w");
 	VenueAndSensorInfo origin = Origin(inputFilename);

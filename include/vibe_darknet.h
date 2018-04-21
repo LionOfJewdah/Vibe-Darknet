@@ -14,6 +14,7 @@ void output_no_detections(const char* inputFilename);
 char* GetFileThatMightBeRelative(char* buffer, size_t buff_size, char* path);
 char* FileInHome(char* buffer, size_t buffer_size, const char* relative_path);
 char* FileInCV(char* buffer, size_t buffer_size, const char* relative_path);
-char* FileInDarknet(char* buffer, size_t buffer_size, const char* relative_path);
+char* FileInDarknet(char* buffer, size_t buffer_size,
+	const char* relative_path);
 
 #endif // DARKNET_VIBE_API_ADDITIONS

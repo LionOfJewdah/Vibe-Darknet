@@ -675,7 +675,7 @@ image *get_weights(layer l);
 void demo(char *cfgfile, char *weightfile, float thresh, int cam_index,
 	const char *filename, char **names, int classes, int frame_skip,
 	char *prefix, int avg, float hier_thresh, int w, int h, int fps,
-    int fullscreen);
+	int fullscreen);
 void get_detection_detections(layer l, int w, int h, float thresh,
     detection *dets);
 
@@ -692,8 +692,8 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff);
 void zero_objectness(layer l);
 void get_region_detections(layer l, int w, int h, int netw, int neth,
 	float thresh, int *map, float tree_thresh, int relative, detection *dets);
-int get_yolo_detections(layer l, int w, int h, int netw, int neth, float thresh,
-	int *map, int relative, detection *dets);
+int get_yolo_detections(layer l, int w, int h, int netw, int neth,
+	float thresh, int *map, int relative, detection *dets);
 void free_network(network *net);
 void set_batch_network(network *net, int b);
 void set_temp_network(network *net, float t);
@@ -715,10 +715,12 @@ void test_resize(char *filename);
 void save_image(image p, const char *name);
 void show_image(image p, const char *name);
 image copy_image(image p);
-void draw_box_width(image a, int x1, int y1, int x2, int y2, int w, float r, float g, float b);
+void draw_box_width(image a, int x1, int y1, int x2, int y2, int w, float r,
+	float g, float b);
 float get_current_rate(network *net);
 void composite_3d(char *f1, char *f2, char *out, int delta);
-data load_data_old(char **paths, int n, int m, char **labels, int k, int w, int h);
+data load_data_old(char **paths, int n, int m, char **labels,
+	int k, int w, int h);
 size_t get_current_batch(network *net);
 void constrain_image(image im);
 image get_network_image_layer(network *net, int i);
@@ -728,7 +730,8 @@ void flip_image(image a);
 image float_to_image(int w, int h, int c, float *data);
 void ghost_image(image source, image dest, int dx, int dy);
 float network_accuracy(network *net, data d);
-void random_distort_image(image im, float hue, float saturation, float exposure);
+void random_distort_image(image im, float hue, float saturation,
+	float exposure);
 void fill_image(image m, float s);
 image grayscale_image(image im);
 void rotate_image_cw(image im, int times);
@@ -809,4 +812,4 @@ size_t rand_size_t();
 float rand_normal();
 float rand_uniform(float min, float max);
 
-#endif
+#endif // DARKNET_API
