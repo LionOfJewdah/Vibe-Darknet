@@ -626,7 +626,7 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile,
 			if (prediction > 1) {
 				append_comma();
 			}
-			snprintf(output_buffer, 256, "result_%.03d", prediction++);
+			snprintf(output_buffer, 256, "result_%.04d", prediction++);
 		}
 		image im = load_image_color(input, 0, 0);
 		image sized = letterbox_image(im, net->w, net->h);
