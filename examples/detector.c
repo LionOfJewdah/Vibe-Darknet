@@ -573,6 +573,7 @@ void validate_detector_recall(char* cfgfile, char* weightfile) {
 	}
 }
 
+char* RouteOutputFilenameFromInput(char* output_buffer, const char* input);
 
 void test_detector(char* datacfg, char* cfgfile, char* weightfile,
 	char* sourceImagePath, float thresh, float hier_thresh, char* outImage,
@@ -592,7 +593,7 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile,
 	double time;
 	char buff[256];
 	char* input = buff;
-	char output_buffer[256] = "predictions";
+	char output_buffer[128] = "predictions";
 	if (!outImage) {
 		outImage = output_buffer;
 	}
@@ -610,7 +611,8 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile,
 				return;
 			}
 			strtok(input, "\n");
-			snprintf(output_buffer, 256, "result_%.04d", prediction++);
+			snprintf(output_buffer, 128, "result_%.04d", prediction++);
+			outImage = RouteOutputFilenameFromInput(output_buffer, input);
 		}
 		image im = load_image_color(input, 0, 0);
 		image sized = letterbox_image(im, net->w, net->h);
@@ -627,15 +629,18 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile,
 			hier_thresh, 0, 1, &nboxes);
 
 		if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
+
+		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
+		save_image(im, outImage);
 		if (nboxes) {
 			int number_of_people = count_people(dets, nboxes, thresh, names);
 			output_people(number_of_people, output_buffer);
 		} else {
 			output_no_detections(output_buffer);
 		}
-		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
+
 		free_detections(dets, nboxes);
-		save_image(im, outImage);
+
 #ifdef OPENCV
 		if (sourceImagePath) {
 			cvNamedWindow("predictions", CV_WINDOW_NORMAL);
@@ -752,47 +757,59 @@ const char* FilenameOnly(const char* in) {
 typedef struct VenueAndSensorInfo {
 	int venue_ID;
 	int sensor_ID;
-	char name [128];
+	char output_name [128];
 } VenueAndSensorInfo;
 
-VenueAndSensorInfo Origin(const char* filename) {
+VenueAndSensorInfo RouteFromOrigin(const char* filename, char* output_buffer) {
 	const char* image_name = FilenameOnly(filename);
 	VenueAndSensorInfo info;
-	sscanf(image_name, "%s %d %d",
-		info.name, &info.venue_ID, &info.sensor_ID);
+	sscanf(image_name, "%d %d", &info.venue_ID, &info.sensor_ID);
+	sprintf(info.output_name, "%d %d", info.venue_ID, info.sensor_ID);
 	return info;
+}
+
+char* RouteOutputFilenameFromInput(char* output_buffer, const char* input) {
+	VenueAndSensorInfo route = RouteFromOrigin(input, output_buffer);
+	strcpy(output_buffer, route.output_name);
+	return output_buffer;
 }
 
 static const char JSON_schema [] = "{\n"
 " \"numberOfPeople\": %d,\n"
 " \"venue_ID\": %d,\n"
-" \"sensor_ID\": %d,\n"
-" \"venueName\": \"%s\"\n"
+" \"sensor_ID\": %d\n"
 "}\n";
 
-void output_people(int number_of_people, const char* inputFilename)
+VenueAndSensorInfo RouteFromOutput(const char* filename) {
+	const char* image_name = FilenameOnly(filename);
+	VenueAndSensorInfo info;
+	sscanf(image_name, "%d %d", &info.venue_ID, &info.sensor_ID);
+	strcpy(info.output_name, image_name);
+	return info;
+}
+
+void output_people(int number_of_people, const char* filename)
 {
-	VenueAndSensorInfo origin = Origin(inputFilename);
-	printf(JSON_schema, number_of_people, origin.venue_ID, origin.sensor_ID,
-		origin.name);
+	VenueAndSensorInfo route = RouteFromOutput(filename);
+	printf(JSON_schema, number_of_people, route.venue_ID, route.sensor_ID);
+	fflush(stdout);
+}
+
+void output_no_detections(const char* filename)
+{
+	VenueAndSensorInfo route = RouteFromOutput(filename);
+	printf(JSON_schema, 0, route.venue_ID, route.sensor_ID);
 	fflush(stdout);
 }
 
 void output_people_to_json_file(int number_of_people,
-	const char* inputFilename, const char* outputFilename)
+	const char* image_name, const char* jsonFilename)
 {
-	FILE* JSON = fopen(outputFilename, "w");
-	VenueAndSensorInfo origin = Origin(inputFilename);
-	fprintf(JSON, JSON_schema, number_of_people, origin.venue_ID,
-		origin.sensor_ID, origin.name);
+	FILE* JSON = fopen(jsonFilename, "w");
+	VenueAndSensorInfo route = RouteFromOutput(image_name);
+	fprintf(JSON, JSON_schema, number_of_people, route.venue_ID,
+		route.sensor_ID);
 	fclose(JSON);
-}
-
-void output_no_detections(const char* inputFilename)
-{
-	VenueAndSensorInfo origin = Origin(inputFilename);
-	printf(JSON_schema, 0, origin.venue_ID, origin.sensor_ID, origin.name);
-	fflush(stdout);
 }
 
 int NetworkVolume(const network* network) {
