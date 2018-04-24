@@ -573,17 +573,6 @@ void validate_detector_recall(char* cfgfile, char* weightfile) {
 	}
 }
 
-inline void begin_json_array() {
-	//putchar('[');
-}
-
-inline void terminate_json() {
-	//puts("]");
-}
-
-inline void append_comma() {
-	//putchar(',');
-}
 
 void test_detector(char* datacfg, char* cfgfile, char* weightfile,
 	char* sourceImagePath, float thresh, float hier_thresh, char* outImage,
@@ -608,7 +597,6 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile,
 		outImage = output_buffer;
 	}
 	float nms = .45;
-	begin_json_array();
 	int prediction = 1;
 	while (1) {
 		if (sourceImagePath) {
@@ -618,14 +606,10 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile,
 			fflush(stderr);
 			input = fgets(input, 256, stdin);
 			if (!input || input[0] == '\n') {
-				terminate_json();
 				fputs("Exiting.\n", stderr);
 				return;
 			}
 			strtok(input, "\n");
-			if (prediction > 1) {
-				append_comma();
-			}
 			snprintf(output_buffer, 256, "result_%.04d", prediction++);
 		}
 		image im = load_image_color(input, 0, 0);
@@ -645,9 +629,9 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile,
 		if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
 		if (nboxes) {
 			int number_of_people = count_people(dets, nboxes, thresh, names);
-			output_people(number_of_people, input);
+			output_people(number_of_people, output_buffer);
 		} else {
-			output_no_detections(input);
+			output_no_detections(output_buffer);
 		}
 		draw_detections(im, dets, nboxes, thresh, names, alphabet, l.classes);
 		free_detections(dets, nboxes);
@@ -662,10 +646,8 @@ void test_detector(char* datacfg, char* cfgfile, char* weightfile,
 #endif
 		free_image(im);
 		free_image(sized);
-		if (sourceImagePath) {
-			terminate_json();
+		if (sourceImagePath)
 			break;
-		}
 	}
 }
 
@@ -810,6 +792,7 @@ void output_no_detections(const char* inputFilename)
 {
 	VenueAndSensorInfo origin = Origin(inputFilename);
 	printf(JSON_schema, 0, origin.venue_ID, origin.sensor_ID, origin.name);
+	fflush(stdout);
 }
 
 int NetworkVolume(const network* network) {
